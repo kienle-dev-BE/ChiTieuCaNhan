@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "settings": {
+    "locale": "vi-VN",
+    "currency": "VND"
+  },
+  "accounts": [
+    { "id": "acc_cash", "name": "Tiền mặt", "startingBalance": 0 },
+    { "id": "acc_bank", "name": "Ngân hàng", "startingBalance": 0 }
+  ],
+  "categories": [
+    { "id": "cat_salary", "type": "income", "name": "Lương", "color": "#7c3aed" },
+    { "id": "cat_income_other", "type": "income", "name": "Khác", "color": "#a78bfa" },
+    { "id": "cat_food", "type": "expense", "name": "Ăn uống", "color": "#f97316" },
+    { "id": "cat_home", "type": "expense", "name": "Nhà ở", "color": "#60a5fa" },
+    { "id": "cat_transport", "type": "expense", "name": "Đi lại", "color": "#06b6d4" },
+    { "id": "cat_utilities", "type": "expense", "name": "Điện/Nước", "color": "#22c55e" },
+    { "id": "cat_fun", "type": "expense", "name": "Giải trí", "color": "#ec4899" },
+    { "id": "cat_health", "type": "expense", "name": "Sức khỏe", "color": "#ef4444" },
+    { "id": "cat_edu", "type": "expense", "name": "Giáo dục", "color": "#eab308" },
+    { "id": "cat_saving", "type": "expense", "name": "Tiết kiệm", "color": "#a78bfa" }
+  ],
+  "transactions": [
+    {
+      "id": "tx_salary_1",
+      "type": "income",
+      "amount": 15000000,
+      "date": "2026-08-19",
+      "categoryId": "cat_salary",
+      "accountId": "acc_bank",
+      "description": "Nhận lương",
+      "createdAt": 1724040000000
+    },
+    {
+      "id": "tx_food_1",
+      "type": "expense",
+      "amount": 280000,
+      "date": "2026-08-19",
+      "categoryId": "cat_food",
+      "accountId": "acc_cash",
+      "description": "Cà phê & bữa trưa",
+      "createdAt": 1724040000001
+    },
+    {
+      "id": "tx_utilities_1",
+      "type": "expense",
+      "amount": 1250000,
+      "date": "2026-08-19",
+      "categoryId": "cat_utilities",
+      "accountId": "acc_bank",
+      "description": "Thanh toán điện nước",
+      "createdAt": 1724040000002
+    }
+  ],
+  "budgets": [
+    {
+      "id": "bud_food_2026_08",
+      "month": "2026-08",
+      "type": "expense",
+      "categoryId": "cat_food",
+      "limit": 3500000,
+      "createdAt": 1724040000100
+    },
+    {
+      "id": "bud_home_2026_08",
+      "month": "2026-08",
+      "type": "expense",
+      "categoryId": "cat_home",
+      "limit": 2500000,
+      "createdAt": 1724040000101
+    },
+    {
+      "id": "bud_transport_2026_08",
+      "month": "2026-08",
+      "type": "expense",
+      "categoryId": "cat_transport",
+      "limit": 1000000,
+      "createdAt": 1724040000102
+    }
+  ]
+}
+

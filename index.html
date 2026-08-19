@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý chi tiêu cá nhân</title>
+    <link rel="stylesheet" href="./app.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="./firebase-config.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Điều hướng">
+        <div class="brand">
+          <div class="brand__logo" aria-hidden="true">💸</div>
+          <div class="brand__text">
+            <div class="brand__name">Chi tiêu</div>
+            <div class="brand__tag">Quản lý cá nhân</div>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <button class="nav__item is-active" data-view="dashboard" type="button">
+            Dashboard
+          </button>
+          <button class="nav__item" data-view="transactions" type="button">
+            Giao dịch
+          </button>
+          <button class="nav__item" data-view="categories" type="button">
+            Danh mục
+          </button>
+          <button class="nav__item" data-view="budgets" type="button">
+            Ngân sách
+          </button>
+          <button class="nav__item" data-view="settings" type="button">
+            Cài đặt
+          </button>
+        </nav>
+
+        <div class="sidebar__footer">
+          <button class="btn btn--secondary w-full" id="btnQuickAdd" type="button">
+            + Thêm giao dịch
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar__left">
+            <div class="topbar__title">Tổng quan</div>
+            <div class="topbar__subtitle">Chọn tháng để xem số liệu</div>
+          </div>
+
+          <div class="topbar__right">
+            <div class="period-picker" id="periodPickerWrap">
+              <div class="period-picker__group">
+                <button class="period-picker__display" id="monthPickerToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                  <span class="period-picker__label">Tháng</span>
+                  <span class="period-picker__value" id="monthPickerDisplay">—</span>
+                </button>
+                <div class="period-picker__panel" id="monthPickerPanel" hidden>
+                  <div class="period-picker__grid period-picker__grid--months" id="monthPickerGrid"></div>
+                </div>
+              </div>
+
+              <div class="period-picker__group">
+                <button class="period-picker__display period-picker__display--year" id="yearPickerToggle" type="button" aria-haspopup="true" aria-expanded="false">
+                  <span class="period-picker__label">Năm</span>
+                  <span class="period-picker__value" id="yearPickerDisplay">—</span>
+                </button>
+                <div class="period-picker__panel period-picker__panel--year" id="yearPickerPanel" hidden>
+                  <div class="period-picker__header">
+                    <button class="period-picker__nav" id="yearPickerPrev" type="button" aria-label="Nhóm năm trước">‹</button>
+                    <span class="period-picker__range" id="yearPickerRange">—</span>
+                    <button class="period-picker__nav" id="yearPickerNext" type="button" aria-label="Nhóm năm sau">›</button>
+                  </div>
+                  <div class="period-picker__grid period-picker__grid--years" id="yearPickerGrid"></div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn--primary" id="btnExport" type="button">
+              Xuất dữ liệu
+            </button>
+            <label class="btn btn--secondary" for="importFile" role="button" tabindex="0">
+              Import
+              <input id="importFile" type="file" accept=".json,.csv" hidden />
+            </label>
+          </div>
+        </header>
+
+        <section class="content" id="app" aria-live="polite">
+          <!-- Render view here -->
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop" hidden></div>
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+      <div class="modal__content">
+        <div class="modal__header">
+          <div class="modal__title" id="modalTitle">Tiêu đề</div>
+          <button class="icon-btn" id="modalClose" type="button" aria-label="Đóng">✕</button>
+        </div>
+        <div class="modal__body" id="modalBody"></div>
+        <div class="modal__footer" id="modalFooter"></div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
