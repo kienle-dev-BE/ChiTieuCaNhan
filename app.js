@@ -300,6 +300,15 @@
     }).format(amount);
   }
 
+  function formatCompactMoney(amount) {
+    const n = Math.abs(Number(amount) || 0);
+    const trim = (v) => String(Number(v.toFixed(v >= 10 ? 0 : 1)));
+    if (n >= 1_000_000_000) return `${trim(n / 1_000_000_000)}tỷ`;
+    if (n >= 1_000_000) return `${trim(n / 1_000_000)}tr`;
+    if (n >= 1000) return `${trim(n / 1000)}k`;
+    return String(Math.round(n));
+  }
+
   function formatAmount(amount, type) {
     const abs = Math.abs(amount);
     const formatted = formatNumber(abs, { withCurrency: true });
@@ -1074,7 +1083,7 @@
       <div class="tx-mini${compact ? " tx-mini--compact" : ""}" data-tx-id="${escapeHtml(tx.id)}">
         <div class="tx-mini__top">
           <span class="tx-mini__time">${escapeHtml(time)}</span>
-          <span class="tx-mini__amount" style="color:${color};">${escapeHtml(formatNumber(amount, { withCurrency: true }))}</span>
+          <span class="tx-mini__amount" style="color:${color};">${escapeHtml(compact ? formatCompactMoney(amount) : formatNumber(amount, { withCurrency: true }))}</span>
         </div>
         <div class="tx-mini__desc">${escapeHtml(tx.description || cat?.name || "Giao dịch")}</div>
         <div class="row-actions tx-mini__actions">
@@ -1547,7 +1556,7 @@
           >
             <div class="tx-week-col__head">
               <div class="tx-week-col__name">${dayNames[idx]}</div>
-              <div class="tx-week-col__date">${escapeHtml(dateISO.slice(8, 10))}/${escapeHtml(dateISO.slice(5, 7))}</div>
+              <div class="tx-week-col__date">${escapeHtml(dateISO.slice(8, 10))}</div>
             </div>
             <div class="tx-week-col__body">
               ${
@@ -1563,12 +1572,12 @@
 
     return `
       <div class="tx-week-nav card">
-        <button class="btn btn--secondary" type="button" id="txWeekPrev">← Tuần trước</button>
+        <button class="btn btn--secondary" type="button" id="txWeekPrev">← Trước</button>
         <div class="tx-week-nav__label">
-          <div class="tx-week-nav__range">${escapeHtml(weekDates[0])} → ${escapeHtml(weekDates[6])}</div>
-          <div class="muted" style="font-size:12px; margin-top:4px;">Tháng đang chọn: ${escapeHtml(state.month)}</div>
+          <div class="tx-week-nav__range">${escapeHtml(weekDates[0].slice(8, 10))}/${escapeHtml(weekDates[0].slice(5, 7))} – ${escapeHtml(weekDates[6].slice(8, 10))}/${escapeHtml(weekDates[6].slice(5, 7))}</div>
+          <div class="muted" style="font-size:11px; margin-top:2px;">${escapeHtml(state.month)}</div>
         </div>
-        <button class="btn btn--secondary" type="button" id="txWeekNext">Tuần sau →</button>
+        <button class="btn btn--secondary" type="button" id="txWeekNext">Sau →</button>
       </div>
       <div class="tx-week-grid">${columns}</div>
     `;
@@ -1614,7 +1623,7 @@
                   <span class="tx-cal-cell__day">${cell.day}</span>
                   ${
                     totalExpense > 0
-                      ? `<span class="tx-cal-cell__total">${escapeHtml(formatNumber(totalExpense, { withCurrency: true }))}</span>`
+                      ? `<span class="tx-cal-cell__total">${escapeHtml(formatCompactMoney(totalExpense))}</span>`
                       : `<span class="tx-cal-cell__total tx-cal-cell__total--zero">—</span>`
                   }
                 </div>
@@ -1622,7 +1631,7 @@
                   ${showTxs
                     .map((tx) => {
                       const cat = byId(state.data.categories, tx.categoryId);
-                      return `<div class="tx-cal-item">${escapeHtml(formatNumber(Number(tx.amount || 0), { withCurrency: true }))} · ${escapeHtml(tx.description || cat?.name || "Chi")}</div>`;
+                      return `<div class="tx-cal-item">${escapeHtml(formatCompactMoney(Number(tx.amount || 0)))} · ${escapeHtml(tx.description || cat?.name || "Chi")}</div>`;
                     })
                     .join("")}
                   ${hasMore ? `<div class="tx-cal-more">...</div>` : ""}
@@ -1725,6 +1734,7 @@
       state.txDisplayMode === "day" ? "theo ngày" : state.txDisplayMode === "week" ? "theo tuần" : "theo tháng";
 
     els.app.innerHTML = `
+    <div class="tx-page">
       <div class="filters">
         <div class="field">
           <div class="label">Hiển thị</div>
@@ -1766,24 +1776,23 @@
         </div>
       </div>
 
-      <div class="card" style="padding:12px;">
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <div class="card tx-page__summary">
+        <div class="tx-page__summary-row">
           <div>
-            <div class="card__title">Giao dịch tháng ${escapeHtml(state.month)} · ${modeLabel}</div>
-            <div class="muted" style="font-size:12px; margin-top:6px;">
-              Có ${monthTxs.length} giao dịch trong tháng.
-            </div>
+            <div class="card__title">Tháng ${escapeHtml(state.month)} · ${modeLabel}</div>
+            <div class="muted tx-page__count">${monthTxs.length} giao dịch</div>
           </div>
           <div class="btn-row">
-            <button class="btn btn--secondary" type="button" id="btnClearFilters">Làm mới lọc</button>
-            <button class="btn btn--primary" type="button" id="btnAddTx">+ Thêm giao dịch</button>
+            <button class="btn btn--secondary" type="button" id="btnClearFilters">Làm mới</button>
+            <button class="btn btn--primary" type="button" id="btnAddTx">+ Thêm</button>
           </div>
         </div>
       </div>
 
-      <div style="margin-top:12px;" id="txViewWrap">
+      <div id="txViewWrap">
         ${renderTxViewContent(viewTxs, filters)}
       </div>
+    </div>
     `;
 
     const rerenderView = () => {
@@ -2955,6 +2964,7 @@
     });
 
     els.btnQuickAdd.addEventListener("click", () => openTransactionModal());
+    $("btnQuickAddMobile")?.addEventListener("click", () => openTransactionModal());
     els.btnExport.addEventListener("click", openExportModal);
   }
 

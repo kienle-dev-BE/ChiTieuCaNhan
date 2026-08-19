@@ -2,7 +2,10 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0512" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Quản lý chi tiêu cá nhân</title>
     <link rel="stylesheet" href="./app.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -81,13 +84,15 @@
                 </div>
               </div>
             </div>
-            <button class="btn btn--primary" id="btnExport" type="button">
-              Xuất dữ liệu
-            </button>
-            <label class="btn btn--secondary" for="importFile" role="button" tabindex="0">
-              Import
-              <input id="importFile" type="file" accept=".json,.csv" hidden />
-            </label>
+            <div class="topbar__file-actions">
+              <button class="btn btn--primary" id="btnExport" type="button">
+                Xuất
+              </button>
+              <label class="btn btn--secondary" for="importFile" role="button" tabindex="0">
+                Import
+                <input id="importFile" type="file" accept=".json,.csv" hidden />
+              </label>
+            </div>
           </div>
         </header>
 
@@ -96,6 +101,30 @@
         </section>
       </main>
     </div>
+
+    <button class="fab" id="btnQuickAddMobile" type="button" aria-label="Thêm giao dịch">+</button>
+    <nav class="bottom-nav" aria-label="Điều hướng điện thoại">
+      <button class="nav__item bottom-nav__item is-active" data-view="dashboard" type="button">
+        <span class="bottom-nav__icon" aria-hidden="true">📊</span>
+        <span class="bottom-nav__label">Tổng quan</span>
+      </button>
+      <button class="nav__item bottom-nav__item" data-view="transactions" type="button">
+        <span class="bottom-nav__icon" aria-hidden="true">💸</span>
+        <span class="bottom-nav__label">Giao dịch</span>
+      </button>
+      <button class="nav__item bottom-nav__item" data-view="categories" type="button">
+        <span class="bottom-nav__icon" aria-hidden="true">🏷️</span>
+        <span class="bottom-nav__label">Danh mục</span>
+      </button>
+      <button class="nav__item bottom-nav__item" data-view="budgets" type="button">
+        <span class="bottom-nav__icon" aria-hidden="true">🎯</span>
+        <span class="bottom-nav__label">Ngân sách</span>
+      </button>
+      <button class="nav__item bottom-nav__item" data-view="settings" type="button">
+        <span class="bottom-nav__icon" aria-hidden="true">⚙️</span>
+        <span class="bottom-nav__label">Cài đặt</span>
+      </button>
+    </nav>
 
     <div class="modal-backdrop" id="modalBackdrop" hidden></div>
     <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
