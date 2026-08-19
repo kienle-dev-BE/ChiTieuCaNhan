@@ -72,6 +72,7 @@ html::before {
 html,
 body {
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -203,15 +204,28 @@ body {
   gap: 12px;
 }
 
-.topbar__title {
-  font-weight: 800;
+.topbar__left {
+  text-align: left;
+  min-width: 0;
+}
+
+.topbar__balance-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.topbar__balance {
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  color: rgba(34, 197, 94, 0.95);
   letter-spacing: 0.2px;
 }
 
-.topbar__subtitle {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 12px;
+.topbar__balance.is-negative {
+  color: rgba(239, 68, 68, 0.95);
 }
 
 .topbar__right {
@@ -222,13 +236,6 @@ body {
   flex-wrap: nowrap;
   gap: 10px;
   flex-shrink: 0;
-}
-
-.topbar__file-actions {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 10px;
 }
 
 .fab,
@@ -423,8 +430,22 @@ select option:hover {
   gap: 12px;
 }
 
-.form-grid .span-2 {
-  grid-column: span 2;
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check-row input {
+  margin-top: 3px;
+  accent-color: var(--primary);
+}
+
+.copy-budget-picker .period-picker__group:has(.period-picker__display--day) {
+  display: none;
 }
 
 .table {
@@ -630,6 +651,26 @@ select option:hover {
   display: flex;
   align-items: stretch;
   gap: 10px;
+}
+
+#periodPickerWrap {
+  position: relative;
+}
+
+#periodPickerWrap .period-picker__group {
+  position: static;
+}
+
+#periodPickerWrap .period-picker__panel,
+#periodPickerWrap .period-picker__group:first-child .period-picker__panel {
+  left: auto;
+  right: 0;
+  width: min(360px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+}
+
+#periodPickerWrap .period-picker__panel--year {
+  width: min(380px, calc(100vw - 32px));
 }
 
 .period-picker__group {
@@ -1569,20 +1610,13 @@ select option:hover {
 
   .topbar__right {
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    justify-content: flex-end;
     width: 100%;
-    overflow-x: auto;
+    overflow: visible;
   }
 
-  .topbar__file-actions {
-    width: auto;
-    flex-shrink: 0;
-  }
-
-  .topbar__file-actions .btn {
-    flex: 0 0 auto;
-    text-align: center;
-    padding: 10px 8px;
+  .topbar__balance {
+    font-size: 20px;
   }
 
   .period-picker {
@@ -1607,9 +1641,9 @@ select option:hover {
     font-size: 20px;
   }
 
-  .period-picker__panel,
-  .period-picker__panel--year,
-  .period-picker__panel--day {
+  .period-picker--modal .period-picker__panel,
+  .period-picker--modal .period-picker__panel--year,
+  .period-picker--modal .period-picker__panel--day {
     position: fixed;
     left: 10px;
     right: 10px;
@@ -1624,8 +1658,7 @@ select option:hover {
 
   .period-picker--modal .period-picker__group:first-child .period-picker__panel,
   .period-picker--modal .period-picker__group:nth-child(2) .period-picker__panel,
-  .period-picker--modal .period-picker__group:last-child .period-picker__panel,
-  .period-picker__group:first-child .period-picker__panel {
+  .period-picker--modal .period-picker__group:last-child .period-picker__panel {
     left: 10px;
     right: 10px;
     transform: none;

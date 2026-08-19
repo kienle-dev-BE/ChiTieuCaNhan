@@ -25,7 +25,6 @@
     yearPickerPrev: document.getElementById("yearPickerPrev"),
     yearPickerNext: document.getElementById("yearPickerNext"),
     btnQuickAdd: document.getElementById("btnQuickAdd"),
-    btnExport: document.getElementById("btnExport"),
     importFile: document.getElementById("importFile"),
     navItems: Array.from(document.querySelectorAll(".nav__item")),
   };
@@ -48,6 +47,7 @@
     txDayTimeEnd: "06:00",
     txWeekStart: "",
     txDrillBackTo: null, // null | "month" | "week"
+    budgetClipboard: null, // { month, items: [{ type, categoryId, limit }] }
   };
 
   let firestoreDb = null;
@@ -111,6 +111,17 @@
 
   const MONTH_SHORT_LABELS = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
   const YEAR_GRID_SIZE = 12;
+
+  function addMonthsYM(ym, delta) {
+    const { year, month } = parseMonthValue(ym);
+    const dt = new Date(year, month - 1 + delta, 1);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function formatMonthYearLabel(ym) {
+    const { year, month } = parseMonthValue(ym);
+    return `${String(month).padStart(2, "0")}/${year}`;
+  }
 
   function applyPeriodChange(year, month) {
     state.month = `${year}-${String(month).padStart(2, "0")}`;
@@ -358,8 +369,44 @@
     return parseMoneyInput($(id)?.value);
   }
 
+  function sanitizeData(data) {
+    return JSON.parse(JSON.stringify(data));
+  }
+
+  function normalizeAppData(data) {
+    if (!data || typeof data !== "object" || data.version !== 1) return null;
+    const next = {
+      version: 1,
+      settings: {
+        locale: data.settings?.locale || "vi-VN",
+        currency: data.settings?.currency || "VND",
+      },
+      accounts: Array.isArray(data.accounts) ? data.accounts : [],
+      categories: Array.isArray(data.categories) ? data.categories : [],
+      transactions: Array.isArray(data.transactions) ? data.transactions : [],
+      budgets: Array.isArray(data.budgets) ? data.budgets : [],
+    };
+    next.budgets = next.budgets
+      .filter((b) => b && b.categoryId && b.month)
+      .map((b) => ({
+        id: b.id || uuid(),
+        month: String(b.month).slice(0, 7),
+        type: b.type === "income" ? "income" : "expense",
+        categoryId: b.categoryId,
+        limit: Number(b.limit || 0),
+        createdAt: Number(b.createdAt || Date.now()),
+      }));
+    return next;
+  }
+
+  function persistLocal(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
   function saveData() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+    if (!state.data) return;
+    if (!Array.isArray(state.data.budgets)) state.data.budgets = [];
+    persistLocal(state.data);
     queueWriteToLinkedFile();
     queueWriteToBackend();
     queueWriteToFirestore();
@@ -394,17 +441,22 @@
   let firestoreWriteChain = Promise.resolve();
   function queueWriteToFirestore() {
     if (!state.firebaseReady || !firestoreDb || !state.data) return;
-    const payload = state.data;
+    let payload;
+    try {
+      payload = sanitizeData(state.data);
+    } catch (err) {
+      state.firebaseError = err?.message || String(err);
+      return;
+    }
     firestoreWriteChain = firestoreWriteChain
       .catch(() => {})
       .then(async () => {
-        await firestoreDb
-          .collection(FIRESTORE_COLLECTION)
-          .doc(FIRESTORE_DOC_ID)
-          .set(payload);
+        await firestoreDb.collection(FIRESTORE_COLLECTION).doc(FIRESTORE_DOC_ID).set(payload);
+        state.firebaseError = "";
       })
       .catch((err) => {
         state.firebaseError = err?.message || String(err);
+        console.error("Không ghi được Firestore:", err);
       });
   }
 
@@ -416,21 +468,24 @@
         .doc(FIRESTORE_DOC_ID)
         .get();
       if (!snap.exists) return null;
-      const parsed = snap.data();
-      if (parsed && parsed.version === 1) return parsed;
-      return null;
+      return normalizeAppData(snap.data());
     } catch (err) {
       state.firebaseError = err?.message || String(err);
       return null;
     }
   }
 
+  async function writeFirestoreDoc(data) {
+    if (!state.firebaseReady || !firestoreDb || !data) return;
+    await firestoreDb.collection(FIRESTORE_COLLECTION).doc(FIRESTORE_DOC_ID).set(sanitizeData(data));
+  }
+
   async function ensureFirestoreSeed() {
     if (!state.firebaseReady || !firestoreDb) return;
     const seeded = seedData();
     state.data = seeded;
-    await firestoreDb.collection(FIRESTORE_COLLECTION).doc(FIRESTORE_DOC_ID).set(seeded);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+    await writeFirestoreDoc(seeded);
+    persistLocal(seeded);
   }
 
   let writeChain = Promise.resolve();
@@ -499,31 +554,68 @@
     }
   }
 
-  function loadDataFromLocalOrSeed() {
+  function readLocalAppData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = raw ? safeParseJson(raw) : null;
-    if (parsed && parsed.version === 1) return parsed;
-    return seedData();
+    return normalizeAppData(parsed);
+  }
+
+  function loadDataFromLocalOrSeed() {
+    return readLocalAppData() || seedData();
+  }
+
+  function mergeMissingBudgets(cloud, local) {
+    if (!cloud) return local;
+    if (!local?.budgets?.length) return cloud;
+    const keyOf = (b) => `${b.month}|${b.type}|${b.categoryId}`;
+    const have = new Set((cloud.budgets || []).map(keyOf));
+    const extra = local.budgets.filter((b) => b && !have.has(keyOf(b)));
+    if (!extra.length) return cloud;
+    return { ...cloud, budgets: [...cloud.budgets, ...extra] };
   }
 
   async function loadDataAsync() {
+    const localData = readLocalAppData();
+
     if (isFirebaseConfigured()) {
       const firebaseOk = await initFirebase();
       if (firebaseOk) {
         const fromFirestore = await tryLoadFromFirestore();
-        if (fromFirestore) return fromFirestore;
+        if (fromFirestore) {
+          const merged = mergeMissingBudgets(fromFirestore, localData);
+          if ((merged.budgets || []).length !== (fromFirestore.budgets || []).length) {
+            await writeFirestoreDoc(merged);
+          }
+          persistLocal(merged);
+          return merged;
+        }
+        if (localData) {
+          await writeFirestoreDoc(localData);
+          return localData;
+        }
         await ensureFirestoreSeed();
         return state.data;
       }
     }
 
     const fromBackend = await tryLoadFromBackend();
-    if (fromBackend) return fromBackend;
+    if (fromBackend) {
+      const normalized = normalizeAppData(fromBackend);
+      if (normalized) {
+        persistLocal(normalized);
+        return normalized;
+      }
+    }
+
+    if (localData) return localData;
 
     const fromFile = await tryLoadStaticDataJson();
-    if (fromFile) return fromFile;
+    if (fromFile) {
+      const normalized = normalizeAppData(fromFile);
+      if (normalized) return normalized;
+    }
 
-    return loadDataFromLocalOrSeed();
+    return seedData();
   }
 
   function seedData() {
@@ -686,6 +778,18 @@
       delta += tx.type === "income" ? amt : -amt;
     }
     return Number(acc.startingBalance || 0) + delta;
+  }
+
+  function totalAccountBalance() {
+    return (state.data.accounts || []).reduce((sum, acc) => sum + accountBalance(acc.id), 0);
+  }
+
+  function updateTopbarBalance() {
+    const el = $("topbarTotalBalance");
+    if (!el || !state.data) return;
+    const total = totalAccountBalance();
+    el.textContent = formatNumber(total, { withCurrency: true });
+    el.classList.toggle("is-negative", total < 0);
   }
 
   function spentByCategory(monthTxs, type) {
@@ -1969,9 +2073,17 @@
           </div>
         </div>
         <div class="btn-row">
+          <button class="btn btn--secondary" type="button" id="btnCopyBudgets" ${budgets.length ? "" : "disabled"}>Sao chép</button>
+          <button class="btn btn--secondary" type="button" id="btnPasteBudgets">Dán</button>
+          <button class="btn btn--secondary" type="button" id="btnCopyBudgetsTo" ${budgets.length ? "" : "disabled"}>Sao chép sang tháng khác</button>
           <button class="btn btn--primary" type="button" id="btnAddBudget">+ Thêm ngân sách</button>
         </div>
       </div>
+      ${
+        state.budgetClipboard?.items?.length
+          ? `<div class="muted" style="font-size:12px; margin-top:8px;">Đang giữ ${state.budgetClipboard.items.length} ngân sách từ tháng ${escapeHtml(formatMonthYearLabel(state.budgetClipboard.month))}.</div>`
+          : ""
+      }
 
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:12px;">
         ${rows}
@@ -1979,6 +2091,144 @@
     `;
 
     $("btnAddBudget").addEventListener("click", () => openBudgetModal());
+    $("btnCopyBudgets")?.addEventListener("click", copyBudgetsFromCurrentMonth);
+    $("btnPasteBudgets")?.addEventListener("click", () => pasteBudgetsToMonth(state.month));
+    $("btnCopyBudgetsTo")?.addEventListener("click", openCopyBudgetsModal);
+  }
+
+  function snapshotBudgets(month) {
+    return state.data.budgets
+      .filter((b) => b.month === month)
+      .map((b) => ({
+        type: b.type,
+        categoryId: b.categoryId,
+        limit: Number(b.limit || 0),
+      }));
+  }
+
+  function copyBudgetsFromCurrentMonth() {
+    const items = snapshotBudgets(state.month);
+    if (!items.length) return alert("Tháng này chưa có ngân sách để sao chép.");
+    state.budgetClipboard = { month: state.month, items };
+    alert(`Đã sao chép ${items.length} ngân sách từ tháng ${formatMonthYearLabel(state.month)}.\nĐổi tháng ở topbar rồi bấm Dán, hoặc dùng “Sao chép sang tháng khác”.`);
+    renderBudgets();
+  }
+
+  function applyBudgetSnapshots(items, targetMonth, overwrite) {
+    let copied = 0;
+    let skipped = 0;
+    let overwritten = 0;
+    for (const item of items) {
+      const existing = state.data.budgets.find(
+        (b) => b.month === targetMonth && b.type === item.type && b.categoryId === item.categoryId
+      );
+      if (existing) {
+        if (overwrite) {
+          existing.limit = item.limit;
+          overwritten += 1;
+        } else {
+          skipped += 1;
+        }
+        continue;
+      }
+      state.data.budgets.push({
+        id: uuid(),
+        month: targetMonth,
+        type: item.type,
+        categoryId: item.categoryId,
+        limit: item.limit,
+        createdAt: Date.now(),
+      });
+      copied += 1;
+    }
+    return { copied, skipped, overwritten };
+  }
+
+  function pasteBudgetsToMonth(targetMonth, items = state.budgetClipboard?.items, sourceMonth = state.budgetClipboard?.month, overwritePref) {
+    if (!items?.length) return alert("Chưa có ngân sách đã sao chép. Bấm “Sao chép” trước.");
+    if (sourceMonth && sourceMonth === targetMonth) {
+      return alert("Tháng đích trùng tháng nguồn. Hãy chọn tháng khác.");
+    }
+
+    const existingCount = state.data.budgets.filter((b) => b.month === targetMonth).length;
+    const runPaste = (overwrite) => {
+      const result = applyBudgetSnapshots(items, targetMonth, overwrite);
+      saveData();
+      const { year, month } = parseMonthValue(targetMonth);
+      closeModal();
+      applyPeriodChange(year, month);
+      const parts = [];
+      if (result.copied) parts.push(`thêm ${result.copied}`);
+      if (result.overwritten) parts.push(`ghi đè ${result.overwritten}`);
+      if (result.skipped) parts.push(`bỏ qua ${result.skipped} (đã có)`);
+      alert(`Đã dán ngân sách sang tháng ${formatMonthYearLabel(targetMonth)}: ${parts.join(", ") || "không có thay đổi"}.`);
+    };
+
+    if (overwritePref === true || overwritePref === false) {
+      runPaste(overwritePref);
+      return;
+    }
+
+    if (!existingCount) {
+      runPaste(false);
+      return;
+    }
+
+    showModal({
+      title: "Dán ngân sách",
+      bodyHtml: `
+        <div>Tháng ${escapeHtml(formatMonthYearLabel(targetMonth))} đã có ${existingCount} ngân sách.</div>
+        <div class="muted" style="font-size:12px; margin-top:8px;">
+          Ghi đè: cập nhật giới hạn các danh mục trùng. Chỉ thêm mới: giữ nguyên mục đã có.
+        </div>
+      `,
+      footerHtml: `
+        <button class="btn btn--secondary" type="button" id="modalCancel">Hủy</button>
+        <button class="btn btn--secondary" type="button" id="budgetPasteSkip">Chỉ thêm mới</button>
+        <button class="btn btn--primary" type="button" id="budgetPasteOverwrite">Ghi đè trùng</button>
+      `,
+    });
+    $("modalCancel").addEventListener("click", closeModal);
+    $("budgetPasteSkip").addEventListener("click", () => runPaste(false));
+    $("budgetPasteOverwrite").addEventListener("click", () => runPaste(true));
+  }
+
+  function openCopyBudgetsModal() {
+    const items = snapshotBudgets(state.month);
+    if (!items.length) return alert("Tháng này chưa có ngân sách để sao chép.");
+    const sourceMonth = state.month;
+    const defaultTarget = addMonthsYM(sourceMonth, 1) + "-01";
+
+    showModal({
+      title: "Sao chép sang tháng khác",
+      bodyHtml: `
+        <div class="muted" style="font-size:13px; margin-bottom:12px;">
+          Sao chép <strong>${items.length}</strong> ngân sách từ tháng ${escapeHtml(formatMonthYearLabel(sourceMonth))} sang:
+        </div>
+        <div class="copy-budget-picker">
+          ${renderModalDatePickerHTML(defaultTarget)}
+        </div>
+        <label class="check-row" style="margin-top:12px;">
+          <input id="budgetCopyOverwrite" type="checkbox" />
+          <span>Ghi đè nếu tháng đích đã có cùng danh mục</span>
+        </label>
+      `,
+      footerHtml: `
+        <button class="btn btn--secondary" type="button" id="modalCancel">Hủy</button>
+        <button class="btn btn--primary" type="button" id="modalCopyBudgets">Sao chép</button>
+      `,
+    });
+
+    $("modalCancel").addEventListener("click", closeModal);
+    bindModalDatePicker(defaultTarget);
+
+    $("modalCopyBudgets").addEventListener("click", () => {
+      const dateISO = $("txDate")?.value || "";
+      const targetMonth = dateISO.slice(0, 7);
+      if (!targetMonth || targetMonth.length !== 7) return alert("Vui lòng chọn tháng đích.");
+      state.budgetClipboard = { month: sourceMonth, items };
+      pasteBudgetsToMonth(targetMonth, items, sourceMonth, $("budgetCopyOverwrite")?.checked);
+    });
   }
 
   function budgetCardHtml(budget, monthTxs) {
@@ -2175,10 +2425,12 @@
           <div>
             <div style="font-weight:900;">Dữ liệu</div>
             <div class="muted" style="font-size:12px; margin-top:6px;">
-              Bạn có thể xuất dữ liệu bằng nút “Xuất dữ liệu” trên thanh trên cùng.
+              Xuất backup JSON/CSV hoặc nhập dữ liệu từ file.
             </div>
           </div>
           <div class="btn-row">
+            <button class="btn btn--primary" type="button" id="btnExport">Xuất dữ liệu</button>
+            <label class="btn btn--secondary" for="importFile" role="button" tabindex="0">Import</label>
             <button class="btn btn--secondary" type="button" id="btnResetData" style="border-color: rgba(239,68,68,0.5); color: rgba(239,68,68,0.95);">
               Reset dữ liệu
             </button>
@@ -2193,10 +2445,12 @@
       state.data.settings.locale = locale;
       state.data.settings.currency = currency;
       saveData();
+      updateTopbarBalance();
       renderSettings();
     });
 
     $("btnAddAccount").addEventListener("click", () => openAccountModal());
+    $("btnExport")?.addEventListener("click", openExportModal);
     $("btnResetData").addEventListener("click", () => {
       showModal({
         title: "Xác nhận reset dữ liệu?",
@@ -2983,7 +3237,6 @@
 
     els.btnQuickAdd.addEventListener("click", () => openTransactionModal());
     $("btnQuickAddMobile")?.addEventListener("click", () => openTransactionModal());
-    els.btnExport.addEventListener("click", openExportModal);
   }
 
   function handleImportFile() {
@@ -3014,6 +3267,7 @@
 
   function render() {
     if (!state.data) return;
+    updateTopbarBalance();
     if (state.view === "dashboard") return renderDashboard();
     if (state.view === "transactions") return renderTransactions();
     if (state.view === "categories") return renderCategories();

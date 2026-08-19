@@ -53,8 +53,8 @@
       <main class="main">
         <header class="topbar">
           <div class="topbar__left">
-            <div class="topbar__title">Tổng quan</div>
-            <div class="topbar__subtitle">Chọn tháng để xem số liệu</div>
+            <div class="topbar__balance-label">Tổng số dư</div>
+            <div class="topbar__balance" id="topbarTotalBalance">—</div>
           </div>
 
           <div class="topbar__right">
@@ -83,15 +83,6 @@
                   <div class="period-picker__grid period-picker__grid--years" id="yearPickerGrid"></div>
                 </div>
               </div>
-            </div>
-            <div class="topbar__file-actions">
-              <button class="btn btn--primary" id="btnExport" type="button">
-                Xuất
-              </button>
-              <label class="btn btn--secondary" for="importFile" role="button" tabindex="0">
-                Import
-                <input id="importFile" type="file" accept=".json,.csv" hidden />
-              </label>
             </div>
           </div>
         </header>
@@ -137,6 +128,8 @@
         <div class="modal__footer" id="modalFooter"></div>
       </div>
     </div>
+
+    <input id="importFile" type="file" accept=".json,.csv" hidden />
 
     <script src="./app.js"></script>
   </body>
