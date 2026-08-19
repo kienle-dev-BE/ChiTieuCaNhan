@@ -19,6 +19,15 @@
   --radius-sm: 10px;
   --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
+  --z-bg: 0;
+  --z-app: 1;
+  --z-content: 1;
+  --z-sidebar: 2;
+  --z-topbar: 20;
+  --z-dropdown: 40;
+  --z-modal-backdrop: 1000;
+  --z-modal: 1010;
+  --z-modal-dropdown: 1100;
 }
 
 * {
@@ -49,7 +58,7 @@ html::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: var(--z-bg);
   pointer-events: none;
   background:
     radial-gradient(ellipse 130% 90% at 50% -18%, rgba(91, 33, 182, 0.22), transparent 62%),
@@ -67,7 +76,7 @@ body {
 
 body {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-app);
   margin: 0;
   font-family: var(--font);
   color: var(--text);
@@ -87,6 +96,8 @@ body {
 }
 
 .app-shell {
+  position: relative;
+  z-index: var(--z-app);
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 18px;
@@ -108,6 +119,7 @@ body {
   height: calc(100vh - 36px);
   position: sticky;
   top: 18px;
+  z-index: var(--z-sidebar);
 }
 
 .brand {
@@ -176,7 +188,7 @@ body {
 
 .topbar {
   position: relative;
-  z-index: 40;
+  z-index: var(--z-topbar);
   overflow: visible;
   background: var(--panel);
   backdrop-filter: blur(18px);
@@ -203,6 +215,8 @@ body {
 }
 
 .topbar__right {
+  position: relative;
+  z-index: var(--z-dropdown);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -216,7 +230,8 @@ body {
 
 .content {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-content);
+  overflow: visible;
   background: var(--panel);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -464,6 +479,7 @@ select option:hover {
 .modal-backdrop {
   position: fixed;
   inset: 0;
+  z-index: var(--z-modal-backdrop);
   background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(45, 16, 82, 0.32), rgba(3, 2, 8, 0.88));
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -472,10 +488,12 @@ select option:hover {
 .modal {
   position: fixed;
   inset: 0;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 18px;
+  overflow: visible;
 }
 
 .modal[hidden],
@@ -484,14 +502,20 @@ select option:hover {
 }
 
 .modal > .modal__content {
+  position: relative;
+  z-index: var(--z-modal);
+  overflow: visible;
   background: rgba(14, 6, 28, 0.96);
   border: 1px solid rgba(167, 139, 250, 0.22);
   border-radius: var(--radius);
   width: min(720px, 100%);
+  max-height: calc(100vh - 36px);
   box-shadow: var(--shadow);
 }
 
 .modal__header {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -505,11 +529,15 @@ select option:hover {
 }
 
 .modal__body {
+  position: relative;
+  z-index: 3;
   padding: 14px 16px;
   overflow: visible;
 }
 
 .tx-modal-date {
+  position: relative;
+  z-index: var(--z-modal-dropdown);
   margin-bottom: 16px;
 }
 
@@ -547,14 +575,19 @@ select option:hover {
 
 .period-picker__panel--day {
   width: min(300px, calc(100vw - 36px));
-  z-index: 120;
 }
 
 .period-picker--modal .period-picker__panel {
-  z-index: 120;
+  z-index: var(--z-modal-dropdown);
+}
+
+.period-picker--modal .period-picker__group:has(.period-picker__display[aria-expanded="true"]) {
+  z-index: var(--z-modal-dropdown);
 }
 
 .modal__footer {
+  position: relative;
+  z-index: 1;
   padding: 14px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
@@ -591,7 +624,7 @@ select option:hover {
 }
 
 .period-picker__group:has(.period-picker__display[aria-expanded="true"]) {
-  z-index: 10;
+  z-index: var(--z-dropdown);
 }
 
 .period-picker__display {
@@ -647,7 +680,7 @@ select option:hover {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   width: min(360px, calc(100vw - 36px));
   padding: 16px;
   border-radius: var(--radius);
@@ -787,7 +820,10 @@ select option:hover {
 }
 
 .tx-day-controls {
+  position: relative;
+  z-index: var(--z-dropdown);
   margin-bottom: 12px;
+  overflow: visible;
 }
 
 .tx-day-controls__row {
@@ -795,6 +831,7 @@ select option:hover {
   align-items: flex-start;
   gap: 14px;
   flex-wrap: wrap;
+  overflow: visible;
 }
 
 .tx-day-controls__times {
@@ -816,6 +853,7 @@ select option:hover {
 
 .tx-day-picker {
   position: relative;
+  z-index: var(--z-dropdown);
   flex-shrink: 0;
 }
 
@@ -861,7 +899,7 @@ select option:hover {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  z-index: 40;
+  z-index: var(--z-dropdown);
   width: min(280px, calc(100vw - 36px));
   padding: 10px;
   border-radius: 12px;
