@@ -1481,6 +1481,13 @@
       slotMap.get(key).push(tx);
     }
 
+    const selectedDayTxs = filterTransactions(
+      txs.filter((t) => t.date === selectedDate),
+      filters
+    );
+    const totalExpense = sumExpense(selectedDayTxs);
+    const expenseCount = selectedDayTxs.filter((t) => t.type === "expense").length;
+
     const backLabels = { month: "← Quay lại lịch tháng", week: "← Quay lại tuần" };
     const backBtn = state.txDrillBackTo
       ? `<button class="btn btn--secondary tx-back-btn" type="button" id="txBackDrill">${backLabels[state.txDrillBackTo] || "← Quay lại"}</button>`
@@ -1510,6 +1517,13 @@
 
     return `
       ${backBtn}
+      <div class="tx-day-summary card">
+        <div class="tx-day-summary__label">Tổng chi ngày ${escapeHtml(selectedDate.slice(8, 10))}/${escapeHtml(selectedDate.slice(5, 7))}</div>
+        <div class="tx-day-summary__value${totalExpense > 0 ? "" : " tx-day-summary__value--zero"}">${
+          totalExpense > 0 ? escapeHtml(formatNumber(totalExpense, { withCurrency: true })) : "—"
+        }</div>
+        <div class="tx-day-summary__meta muted">${expenseCount} khoản chi</div>
+      </div>
       <div class="tx-day-controls card">
         <div class="tx-day-controls__row">
           ${renderTxDayPicker(selectedDate)}
@@ -1544,6 +1558,7 @@
           filters
         ).sort((a, b) => timeToMinutes(getTxTime(a)) - timeToMinutes(getTxTime(b)));
         const dayInMonth = inMonth(dateISO, state.month);
+        const totalExpense = sumExpense(dayTxs);
         return `
           <div
             class="tx-week-col tx-week-col--clickable${dayInMonth ? "" : " tx-week-col--outside"}"
@@ -1557,6 +1572,9 @@
             <div class="tx-week-col__head">
               <div class="tx-week-col__name">${dayNames[idx]}</div>
               <div class="tx-week-col__date">${escapeHtml(dateISO.slice(8, 10))}</div>
+              <div class="tx-week-col__total${totalExpense > 0 ? "" : " tx-week-col__total--zero"}">${
+                totalExpense > 0 ? escapeHtml(formatCompactMoney(totalExpense)) : "—"
+              }</div>
             </div>
             <div class="tx-week-col__body">
               ${
