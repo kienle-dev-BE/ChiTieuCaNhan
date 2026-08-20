@@ -1,0 +1,31 @@
+{
+  "name": "Chi tiêu cá nhân",
+  "short_name": "Chi tiêu",
+  "description": "Quản lý thu chi cá nhân",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0512",
+  "theme_color": "#0a0512",
+  "icons": [
+    {
+      "src": "./Logo.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./Logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./Logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

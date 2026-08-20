@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0512" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Chi tiêu" />
     <title>Quản lý chi tiêu cá nhân</title>
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" type="image/png" href="./Logo.png" />
+    <link rel="apple-touch-icon" href="./Logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./Logo.png" />
     <link rel="stylesheet" href="./app.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -15,6 +21,16 @@
     <script src="./firebase-config.js"></script>
   </head>
   <body>
+    <header class="app-header">
+      <div class="app-header__brand">
+        <img class="app-header__logo" src="./Logo.png" alt="" width="42" height="42" />
+        <div class="app-header__text">
+          <div class="app-header__title">Chi tiêu cá nhân</div>
+          <div class="app-header__subtitle">Quản lý thu chi</div>
+        </div>
+      </div>
+    </header>
+
     <div class="app-shell">
       <aside class="sidebar" aria-label="Điều hướng">
         <div class="brand">
@@ -96,23 +112,63 @@
     <button class="fab" id="btnQuickAddMobile" type="button" aria-label="Thêm giao dịch">+</button>
     <nav class="bottom-nav" aria-label="Điều hướng điện thoại">
       <button class="nav__item bottom-nav__item is-active" data-view="dashboard" type="button">
-        <span class="bottom-nav__icon" aria-hidden="true">📊</span>
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" rx="1.5" />
+            <rect x="14" y="3" width="7" height="5" rx="1.5" />
+            <rect x="14" y="12" width="7" height="9" rx="1.5" />
+            <rect x="3" y="16" width="7" height="5" rx="1.5" />
+          </svg>
+        </span>
         <span class="bottom-nav__label">Tổng quan</span>
       </button>
       <button class="nav__item bottom-nav__item" data-view="transactions" type="button">
-        <span class="bottom-nav__icon" aria-hidden="true">💸</span>
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h12" />
+            <path d="M14 4l3 3-3 3" />
+            <path d="M20 17H8" />
+            <path d="M10 20l-3-3 3-3" />
+          </svg>
+        </span>
         <span class="bottom-nav__label">Giao dịch</span>
       </button>
       <button class="nav__item bottom-nav__item" data-view="categories" type="button">
-        <span class="bottom-nav__icon" aria-hidden="true">🏷️</span>
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h7l2 2h7v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" />
+            <path d="M4 7V6a2 2 0 0 1 2-2h4l2 2" />
+          </svg>
+        </span>
         <span class="bottom-nav__label">Danh mục</span>
       </button>
       <button class="nav__item bottom-nav__item" data-view="budgets" type="button">
-        <span class="bottom-nav__icon" aria-hidden="true">🎯</span>
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 4v2.5" />
+            <path d="M12 17.5V20" />
+            <path d="M4 12h2.5" />
+            <path d="M17.5 12H20" />
+          </svg>
+        </span>
         <span class="bottom-nav__label">Ngân sách</span>
       </button>
       <button class="nav__item bottom-nav__item" data-view="settings" type="button">
-        <span class="bottom-nav__icon" aria-hidden="true">⚙️</span>
+        <span class="bottom-nav__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 21V14" />
+            <path d="M4 10V3" />
+            <path d="M12 21V12" />
+            <path d="M12 8V3" />
+            <path d="M20 21V16" />
+            <path d="M20 12V3" />
+            <path d="M2 14h4" />
+            <path d="M10 8h4" />
+            <path d="M18 16h4" />
+          </svg>
+        </span>
         <span class="bottom-nav__label">Cài đặt</span>
       </button>
     </nav>

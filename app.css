@@ -23,6 +23,7 @@
   --z-app: 1;
   --z-content: 1;
   --z-sidebar: 2;
+  --z-header: 25;
   --z-topbar: 20;
   --z-dropdown: 40;
   --z-modal-backdrop: 1000;
@@ -96,6 +97,59 @@ body {
   border: 0;
 }
 
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  background: rgba(10, 5, 18, 0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  text-align: left;
+}
+
+.app-header__logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  flex-shrink: 0;
+  display: block;
+}
+
+.app-header__title {
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.app-header__subtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sidebar .brand {
+  display: none;
+}
+
 .app-shell {
   position: relative;
   z-index: var(--z-app);
@@ -117,9 +171,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  height: calc(100vh - 36px);
+  height: calc(100vh - 36px - 66px);
   position: sticky;
-  top: 18px;
+  top: 78px;
   z-index: var(--z-sidebar);
 }
 
@@ -1515,6 +1569,25 @@ select option:hover {
     min-height: 100dvh;
   }
 
+  .app-header {
+    padding: 10px 12px;
+    padding-top: max(10px, env(safe-area-inset-top, 0px));
+  }
+
+  .app-header__logo {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .app-header__title {
+    font-size: 15px;
+  }
+
+  .app-header__subtitle {
+    display: none;
+  }
+
   .app-shell {
     padding: 10px 10px calc(88px + env(safe-area-inset-bottom, 0px));
     gap: 10px;
@@ -1556,8 +1629,26 @@ select option:hover {
   }
 
   .bottom-nav__icon {
-    font-size: 16px;
-    line-height: 1;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+  }
+
+  .bottom-nav__icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+
+  .bottom-nav__item.is-active .bottom-nav__icon {
+    color: var(--primary-2);
+  }
+
+  .bottom-nav__item.is-active .bottom-nav__label {
+    color: var(--primary-2);
   }
 
   .bottom-nav__label {
